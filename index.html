@@ -27,6 +27,8 @@
             display: flex;
             gap: 1em;
             margin-bottom: 1em;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .personality-btn {
             padding: 0.5em 1em;
@@ -130,6 +132,151 @@
             background-color: #f39c12;
             color: white;
         }
+        
+        /* Ses ayarları paneli */
+        #voiceSettingsPanel {
+            background-color: #fff;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+            padding: 1.5em;
+            margin: 1em auto;
+            max-width: 700px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .setting-group {
+            margin-bottom: 1em;
+        }
+        .setting-group label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .setting-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 0.5em;
+        }
+        .setting-value {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        
+        /* Konuşma geçmişi paneli */
+        #historyPanel {
+            background-color: #fff;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+            padding: 1.5em;
+            margin: 1em auto;
+            max-width: 700px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: none;
+        }
+        .history-item {
+            border-bottom: 1px solid #ecf0f1;
+            padding: 1em 0;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .history-timestamp {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-bottom: 0.5em;
+        }
+        .history-question {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5em;
+        }
+        .history-answer {
+            color: #555;
+            margin-bottom: 0.5em;
+        }
+        .history-personality {
+            font-size: 0.8em;
+            color: #3498db;
+            background-color: #ecf0f1;
+            padding: 0.2em 0.5em;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        .history-actions {
+            margin-top: 0.5em;
+        }
+        .history-actions button {
+            padding: 0.3em 0.6em;
+            margin-right: 0.5em;
+            font-size: 0.8em;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-play {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        /* Kontrol butonları */
+        .control-buttons {
+            display: flex;
+            gap: 1em;
+            margin: 1em 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .control-btn {
+            padding: 0.5em 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .btn-history {
+            background-color: #9b59b6;
+            color: white;
+        }
+        .btn-history:hover {
+            background-color: #8e44ad;
+        }
+        .btn-settings {
+            background-color: #f39c12;
+            color: white;
+        }
+        .btn-settings:hover {
+            background-color: #e67e22;
+        }
+        .btn-clear {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-clear:hover {
+            background-color: #c0392b;
+        }
+        
+        /* Responsive tasarım */
+        @media (max-width: 768px) {
+            #personalityButtons {
+                flex-direction: column;
+                gap: 0.5em;
+            }
+            #waveformCanvas {
+                width: 100%;
+                height: 100px;
+            }
+            .control-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            #voiceSettingsPanel, #historyPanel {
+                margin: 1em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -140,9 +287,49 @@
             <button class="personality-btn" data-personality="scientist">Scientist</button>
             <button class="personality-btn" data-personality="planner">Planner</button>
         </div>
-        <button id="recordButton">Başlat</button>
+        
+        <div class="control-buttons">
+            <button id="recordButton" class="control-btn">Başlat</button>
+            <button id="historyButton" class="control-btn btn-history">Geçmiş</button>
+            <button id="settingsButton" class="control-btn btn-settings">Ses Ayarları</button>
+            <button id="clearButton" class="control-btn btn-clear">Geçmişi Temizle</button>
+        </div>
+        
         <canvas id="waveformCanvas"></canvas>
         <div id="statusIndicator" class="status-indicator"></div>
+    </div>
+
+    <!-- Ses ayarları paneli -->
+    <div id="voiceSettingsPanel" style="display: none;">
+        <h3>Ses Kalitesi Ayarları</h3>
+        <div class="setting-group">
+            <label for="stability">Stabilite (0.0 - 1.0)</label>
+            <input type="range" id="stability" min="0" max="1" step="0.1" value="0.5">
+            <div class="setting-value">Değer: <span id="stabilityValue">0.5</span></div>
+        </div>
+        <div class="setting-group">
+            <label for="similarityBoost">Benzerlik Artırma (0.0 - 1.0)</label>
+            <input type="range" id="similarityBoost" min="0" max="1" step="0.1" value="0.75">
+            <div class="setting-value">Değer: <span id="similarityBoostValue">0.75</span></div>
+        </div>
+        <div class="setting-group">
+            <label for="style">Stil (0.0 - 1.0)</label>
+            <input type="range" id="style" min="0" max="1" step="0.1" value="0.0">
+            <div class="setting-value">Değer: <span id="styleValue">0.0</span></div>
+        </div>
+        <div class="setting-group">
+            <label>
+                <input type="checkbox" id="speakerBoost" checked>
+                Konuşmacı Artırma
+            </label>
+        </div>
+        <button id="saveVoiceSettings" class="control-btn btn-settings">Ayarları Kaydet</button>
+    </div>
+
+    <!-- Konuşma geçmişi paneli -->
+    <div id="historyPanel">
+        <h3>Konuşma Geçmişi</h3>
+        <div id="historyList"></div>
     </div>
 
     <div id="errorMessage"></div>
@@ -164,6 +351,15 @@
         const playButton = document.getElementById('playButton');
         const personalityButtons = document.querySelectorAll('.personality-btn');
         const statusIndicator = document.getElementById('statusIndicator');
+        
+        // Yeni elementler
+        const historyButton = document.getElementById('historyButton');
+        const settingsButton = document.getElementById('settingsButton');
+        const clearButton = document.getElementById('clearButton');
+        const voiceSettingsPanel = document.getElementById('voiceSettingsPanel');
+        const historyPanel = document.getElementById('historyPanel');
+        const historyList = document.getElementById('historyList');
+        const saveVoiceSettings = document.getElementById('saveVoiceSettings');
 
         let mediaRecorder;
         let audioChunks = [];
@@ -172,6 +368,12 @@
         let isRecording = false;
         let currentPersonality = 'engineer';
         let isProcessing = false;
+        let sessionId = generateSessionId();
+
+        // Session ID oluştur
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
 
         // Ses dalgası çizimi (optimize edilmiş)
         function drawWaveform() {
@@ -223,7 +425,13 @@
             }
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    } 
+                });
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
 
@@ -315,6 +523,129 @@
             statusIndicator.style.display = 'none';
         }
 
+        // Konuşma geçmişini yükle
+        async function loadConversationHistory() {
+            try {
+                const response = await fetch('/conversation-history?limit=20');
+                const data = await response.json();
+                displayConversationHistory(data.conversations);
+            } catch (error) {
+                console.error('Geçmiş yükleme hatası:', error);
+            }
+        }
+
+        // Konuşma geçmişini görüntüle
+        function displayConversationHistory(conversations) {
+            historyList.innerHTML = '';
+            
+            if (conversations.length === 0) {
+                historyList.innerHTML = '<p>Henüz konuşma geçmişi yok.</p>';
+                return;
+            }
+
+            conversations.forEach(conv => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const timestamp = new Date(conv.timestamp).toLocaleString('tr-TR');
+                
+                historyItem.innerHTML = `
+                    <div class="history-timestamp">${timestamp}</div>
+                    <div class="history-personality">${conv.personality}</div>
+                    <div class="history-question"><strong>Soru:</strong> ${conv.user_question}</div>
+                    <div class="history-answer"><strong>Cevap:</strong> ${conv.ai_answer}</div>
+                    <div class="history-actions">
+                        ${conv.audio_url ? `<button class="btn-play" onclick="playHistoryAudio('${conv.audio_url}')">Sesi Oynat</button>` : ''}
+                        <button class="btn-delete" onclick="deleteConversation(${conv.id})">Sil</button>
+                    </div>
+                `;
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        // Geçmiş sesi oynat
+        function playHistoryAudio(audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch(e => {
+                console.error("Ses oynatma hatası:", e);
+                alert("Ses oynatılamadı.");
+            });
+        }
+
+        // Konuşma sil
+        async function deleteConversation(conversationId) {
+            if (!confirm('Bu konuşmayı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/conversation/${conversationId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadConversationHistory(); // Geçmişi yenile
+                } else {
+                    alert('Konuşma silinirken hata oluştu.');
+                }
+            } catch (error) {
+                console.error('Silme hatası:', error);
+                alert('Konuşma silinirken hata oluştu.');
+            }
+        }
+
+        // Geçmişi temizle
+        async function clearHistory() {
+            if (!confirm('Tüm konuşma geçmişini silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/clear-history', {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadConversationHistory(); // Geçmişi yenile
+                    alert('Geçmiş temizlendi.');
+                } else {
+                    alert('Geçmiş temizlenirken hata oluştu.');
+                }
+            } catch (error) {
+                console.error('Temizleme hatası:', error);
+                alert('Geçmiş temizlenirken hata oluştu.');
+            }
+        }
+
+        // Ses ayarlarını kaydet
+        async function saveVoiceSettings() {
+            const settings = {
+                stability: parseFloat(document.getElementById('stability').value),
+                similarity_boost: parseFloat(document.getElementById('similarityBoost').value),
+                style: parseFloat(document.getElementById('style').value),
+                use_speaker_boost: document.getElementById('speakerBoost').checked
+            };
+
+            try {
+                const response = await fetch('/set-voice-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    alert('Ses ayarları kaydedildi!');
+                    voiceSettingsPanel.style.display = 'none';
+                } else {
+                    alert('Ses ayarları kaydedilirken hata oluştu.');
+                }
+            } catch (error) {
+                console.error('Ses ayarları hatası:', error);
+                alert('Ses ayarları kaydedilirken hata oluştu.');
+            }
+        }
+
         // Buton olayları
         recordButton.addEventListener('click', () => {
             if (!isRecording) {
@@ -355,6 +686,43 @@
                     console.error('Personality set error:', error);
                 }
             });
+        });
+
+        // Yeni buton olayları
+        historyButton.addEventListener('click', () => {
+            if (historyPanel.style.display === 'none') {
+                historyPanel.style.display = 'block';
+                voiceSettingsPanel.style.display = 'none';
+                loadConversationHistory();
+            } else {
+                historyPanel.style.display = 'none';
+            }
+        });
+
+        settingsButton.addEventListener('click', () => {
+            if (voiceSettingsPanel.style.display === 'none') {
+                voiceSettingsPanel.style.display = 'block';
+                historyPanel.style.display = 'none';
+            } else {
+                voiceSettingsPanel.style.display = 'none';
+            }
+        });
+
+        clearButton.addEventListener('click', clearHistory);
+
+        saveVoiceSettings.addEventListener('click', saveVoiceSettings);
+
+        // Ses ayarları slider olayları
+        document.getElementById('stability').addEventListener('input', function() {
+            document.getElementById('stabilityValue').textContent = this.value;
+        });
+
+        document.getElementById('similarityBoost').addEventListener('input', function() {
+            document.getElementById('similarityBoostValue').textContent = this.value;
+        });
+
+        document.getElementById('style').addEventListener('input', function() {
+            document.getElementById('styleValue').textContent = this.value;
         });
 
         playButton.addEventListener('click', () => {
