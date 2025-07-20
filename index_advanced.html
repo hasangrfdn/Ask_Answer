@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Destekli Sesli Soru-Cevap Uygulaması - Gelişmiş</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2em;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 2em;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: fadeInDown 1s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .main-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2em;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .control-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5em;
+            margin-bottom: 2em;
+        }
+
+        .personality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1em;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .personality-btn {
+            padding: 1em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .personality-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .personality-btn:hover::before {
+            left: 100%;
+        }
+
+        .personality-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .personality-btn.active {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            transform: scale(1.05);
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1em;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .control-btn {
+            padding: 1em 1.5em;
+            border: none;
+            border-radius: 15px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-record {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-record.recording {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-history {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+        .btn-settings {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn-analytics {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .waveform-container {
+            width: 100%;
+            max-width: 600px;
+            height: 150px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 1em;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #waveformCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        .status-indicator {
+            padding: 1em 2em;
+            border-radius: 25px;
+            font-weight: bold;
+            text-align: center;
+            margin: 1em 0;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .status-listening {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .status-processing {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            box-shadow: 0 4px 8px rgba(243, 156, 18, 0.3);
+        }
+
+        .status-emotion {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .panels {
+            display: grid;
+            gap: 2em;
+            margin-top: 2em;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 2em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .panel h3 {
+            color: #2c3e50;
+            margin-bottom: 1.5em;
+            font-size: 1.5em;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5em;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2em;
+        }
+
+        .setting-group {
+            background: #f8f9fa;
+            padding: 1.5em;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .setting-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 0.5em;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+        }
+
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+
+        .setting-value {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        .history-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5em;
+            margin-bottom: 1em;
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .history-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .history-timestamp {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-bottom: 0.5em;
+        }
+
+        .history-personality {
+            display: inline-block;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 0.3em 0.8em;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-bottom: 0.5em;
+        }
+
+        .history-question {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5em;
+        }
+
+        .history-answer {
+            color: #555;
+            margin-bottom: 1em;
+            line-height: 1.6;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 0.5em;
+            flex-wrap: wrap;
+        }
+
+        .history-actions button {
+            padding: 0.5em 1em;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .history-actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5em;
+        }
+
+        .analytics-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5em;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .analytics-card h4 {
+            margin-bottom: 0.5em;
+            font-size: 1.2em;
+        }
+
+        .analytics-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+        }
+
+        .answer-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 2em;
+            margin-top: 2em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .answer-section h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5em;
+            margin-bottom: 1em;
+        }
+
+        .answer-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 1.5em;
+            color: #555;
+            background: #f8f9fa;
+            padding: 1em;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .emotion-indicator {
+            display: inline-block;
+            padding: 0.5em 1em;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 1em;
+        }
+
+        .emotion-mutlu {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .emotion-üzgün {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .emotion-kızgın {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .emotion-endişeli {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .emotion-nötr {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 1em 2em;
+            border-radius: 10px;
+            margin: 1em auto;
+            max-width: 700px;
+            display: none;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .audio-player {
+            width: 100%;
+            margin-top: 1em;
+            border-radius: 10px;
+        }
+
+        /* Responsive tasarım */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1em;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .personality-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+            
+            .control-buttons {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+            
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading animasyonu */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* WebSocket bağlantı durumu */
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 0.5em 1em;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        .connection-connected {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .connection-disconnected {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Destekli Sesli Soru-Cevap Uygulaması</h1>
+        
+        <div class="main-panel">
+            <div class="control-section">
+                <div class="personality-grid">
+                    <button class="personality-btn active" data-personality="engineer">👨‍💻 Engineer</button>
+                    <button class="personality-btn" data-personality="scientist">🔬 Scientist</button>
+                    <button class="personality-btn" data-personality="planner">📋 Planner</button>
+                    <button class="personality-btn" data-personality="teacher">👨‍🏫 Teacher</button>
+                    <button class="personality-btn" data-personality="doctor">👨‍⚕️ Doctor</button>
+                </div>
+                
+                <div class="control-buttons">
+                    <button id="recordButton" class="control-btn btn-record">🎤 Başlat</button>
+                    <button id="historyButton" class="control-btn btn-history">📚 Geçmiş</button>
+                    <button id="settingsButton" class="control-btn btn-settings">⚙️ Ayarlar</button>
+                    <button id="analyticsButton" class="control-btn btn-analytics">📊 Analitik</button>
+                    <button id="clearButton" class="control-btn btn-clear">🗑️ Temizle</button>
+                </div>
+                
+                <div class="waveform-container">
+                    <canvas id="waveformCanvas"></canvas>
+                </div>
+                
+                <div id="statusIndicator" class="status-indicator" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Ses Ayarları Paneli -->
+        <div id="voiceSettingsPanel" class="panel">
+            <h3>🎵 Ses Kalitesi Ayarları</h3>
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label for="stability">Stabilite (0.0 - 1.0)</label>
+                    <input type="range" id="stability" min="0" max="1" step="0.1" value="0.5">
+                    <div class="setting-value">Değer: <span id="stabilityValue">0.5</span></div>
+                </div>
+                <div class="setting-group">
+                    <label for="similarityBoost">Benzerlik Artırma (0.0 - 1.0)</label>
+                    <input type="range" id="similarityBoost" min="0" max="1" step="0.1" value="0.75">
+                    <div class="setting-value">Değer: <span id="similarityBoostValue">0.75</span></div>
+                </div>
+                <div class="setting-group">
+                    <label for="style">Stil (0.0 - 1.0)</label>
+                    <input type="range" id="style" min="0" max="1" step="0.1" value="0.0">
+                    <div class="setting-value">Değer: <span id="styleValue">0.0</span></div>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="speakerBoost" checked>
+                        🔊 Konuşmacı Artırma
+                    </label>
+                </div>
+            </div>
+            <button id="saveVoiceSettings" class="control-btn btn-settings">💾 Ayarları Kaydet</button>
+        </div>
+
+        <!-- Konuşma Geçmişi Paneli -->
+        <div id="historyPanel" class="panel">
+            <h3>📚 Konuşma Geçmişi</h3>
+            <div id="historyList" class="history-list"></div>
+        </div>
+
+        <!-- Analitik Paneli -->
+        <div id="analyticsPanel" class="panel">
+            <h3>📊 Kullanım Analitikleri</h3>
+            <div id="analyticsGrid" class="analytics-grid"></div>
+        </div>
+
+        <!-- Cevap Bölümü -->
+        <div id="answerSection" class="answer-section">
+            <h2>💬 Cevap:</h2>
+            <div id="emotionIndicator" class="emotion-indicator" style="display: none;"></div>
+            <div id="answerText" class="answer-text"></div>
+            <button id="playButton" class="control-btn btn-play">🔊 Sesi Oynat</button>
+            <audio id="audioPlayer" class="audio-player" controls style="display: none;"></audio>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <!-- WebSocket Bağlantı Durumu -->
+    <div id="connectionStatus" class="connection-status connection-disconnected">
+        🔴 Bağlantı Yok
+    </div>
+
+    <script>
+        // Global değişkenler
+        let mediaRecorder;
+        let audioChunks = [];
+        let analyser;
+        let animationFrameId;
+        let isRecording = false;
+        let currentPersonality = 'engineer';
+        let currentModel = 'groq_llama';
+        let isProcessing = false;
+        let sessionId = generateSessionId();
+        let websocket = null;
+        let conversationContext = [];
+        let emotionHistory = [];
+
+        // DOM elementleri
+        const recordButton = document.getElementById('recordButton');
+        const waveformCanvas = document.getElementById('waveformCanvas');
+        const ctx = waveformCanvas.getContext('2d');
+        const answerSection = document.getElementById('answerSection');
+        const answerText = document.getElementById('answerText');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const playButton = document.getElementById('playButton');
+        const personalityButtons = document.querySelectorAll('.personality-btn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const emotionIndicator = document.getElementById('emotionIndicator');
+        const connectionStatus = document.getElementById('connectionStatus');
+
+        // Panel elementleri
+        const historyButton = document.getElementById('historyButton');
+        const settingsButton = document.getElementById('settingsButton');
+        const analyticsButton = document.getElementById('analyticsButton');
+        const clearButton = document.getElementById('clearButton');
+        const voiceSettingsPanel = document.getElementById('voiceSettingsPanel');
+        const historyPanel = document.getElementById('historyPanel');
+        const analyticsPanel = document.getElementById('analyticsPanel');
+        const historyList = document.getElementById('historyList');
+        const analyticsGrid = document.getElementById('analyticsGrid');
+        const saveVoiceSettings = document.getElementById('saveVoiceSettings');
+
+        // Session ID oluştur
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // WebSocket bağlantısı
+        function connectWebSocket() {
+            const userId = 'user_' + Date.now();
+            websocket = new WebSocket(`ws://localhost:8000/ws/${userId}`);
+            
+            websocket.onopen = function() {
+                connectionStatus.textContent = '🟢 Bağlı';
+                connectionStatus.className = 'connection-status connection-connected';
+            };
+            
+            websocket.onclose = function() {
+                connectionStatus.textContent = '🔴 Bağlantı Yok';
+                connectionStatus.className = 'connection-status connection-disconnected';
+                // Yeniden bağlanma denemesi
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            websocket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+            
+            websocket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+        }
+
+        // WebSocket mesaj işleme
+        function handleWebSocketMessage(data) {
+            switch(data.type) {
+                case 'ai_response':
+                    displayAnswer(data.text, data.audio_url, data.emotion);
+                    break;
+                case 'command_response':
+                    showStatus(data.response.message, 'command');
+                    break;
+                default:
+                    console.log('Unknown message type:', data.type);
+            }
+        }
+
+        // Ses dalgası çizimi (gelişmiş)
+        function drawWaveform() {
+            if (!analyser) return;
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+
+            ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+            
+            // Gradient arka plan
+            const gradient = ctx.createLinearGradient(0, 0, 0, waveformCanvas.height);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+
+            ctx.beginPath();
+            const sliceWidth = waveformCanvas.width * 1.0 / (bufferLength / 2);
+            let x = 0;
+
+            for (let i = 0; i < bufferLength / 2; i++) {
+                const v = dataArray[i] / 255.0;
+                const y = v * (waveformCanvas.height / 2) + (waveformCanvas.height / 4);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                x += sliceWidth;
+            }
+
+            ctx.lineTo(waveformCanvas.width, waveformCanvas.height / 2);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            if (isRecording) {
+                animationFrameId = requestAnimationFrame(drawWaveform);
+            } else {
+                // Sessiz durumda düz çizgi
+                ctx.beginPath();
+                ctx.moveTo(0, waveformCanvas.height / 2);
+                ctx.lineTo(waveformCanvas.width, waveformCanvas.height / 2);
+                ctx.strokeStyle = '#95a5a6';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        // Gelişmiş ses kayıt sistemi
+        async function startRecording() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showError('Mikrofon desteği bulunamadı. Tarayıcınızı kontrol edin.');
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 44100,
+                        channelCount: 1
+                    } 
+                });
+                
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
+                audioChunks = [];
+
+                const audioContext = new AudioContext();
+                const source = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                analyser.smoothingTimeConstant = 0.8;
+                source.connect(analyser);
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    if (audioChunks.length > 0 && isRecording) {
+                        await processAudio();
+                    }
+                };
+
+                mediaRecorder.start(1000);
+                isRecording = true;
+                recordButton.classList.add('recording');
+                recordButton.innerHTML = '⏹️ Durdur';
+                showStatus('🎤 Dinleniyor...', 'listening');
+                console.log('Recording started...');
+                drawWaveform();
+                
+                // WebSocket üzerinden gerçek zamanlı işlem
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    websocket.send(JSON.stringify({
+                        type: 'recording_started',
+                        session_id: sessionId
+                    }));
+                }
+                
+            } catch (error) {
+                console.error('Mikrofon erişim hatası:', error);
+                showError('Mikrofon erişimi reddedildi. İzin verin.');
+            }
+        }
+
+        // Ses işleme
+        async function processAudio() {
+            if (isProcessing) return;
+            isProcessing = true;
+            showStatus('🔄 İşleniyor...', 'processing');
+
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'recording.webm');
+
+            try {
+                const response = await fetch('/upload-audio', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Bilinmeyen bir hata oluştu.');
+                }
+
+                const data = await response.json();
+                displayAnswer(data.answer, data.audio_url, data.emotion);
+                
+                // Context'e ekle
+                addToContext(data.answer, data.emotion);
+                
+                hideStatus();
+            } catch (error) {
+                console.error('Fetch hatası:', error);
+                showError(`Hata: ${error.message}`);
+                hideStatus();
+            } finally {
+                isProcessing = false;
+                audioChunks = [];
+                
+                if (isRecording) {
+                    startRecording();
+                }
+            }
+        }
+
+        // Cevap görüntüleme
+        function displayAnswer(answer, audioUrl, emotion) {
+            answerText.innerText = answer;
+            audioPlayer.src = audioUrl;
+            answerSection.style.display = 'block';
+            audioPlayer.style.display = 'block';
+            
+            // Duygu göstergesi
+            if (emotion) {
+                emotionIndicator.textContent = `😊 Duygu: ${emotion.emotion}`;
+                emotionIndicator.className = `emotion-indicator emotion-${emotion.emotion}`;
+                emotionIndicator.style.display = 'block';
+            }
+            
+            // Otomatik ses oynatma
+            audioPlayer.play().catch(e => {
+                console.error("Ses oynatma hatası:", e);
+            });
+        }
+
+        // Context yönetimi
+        function addToContext(answer, emotion) {
+            conversationContext.push({
+                answer: answer,
+                emotion: emotion,
+                timestamp: new Date()
+            });
+            
+            // Context boyutunu sınırla
+            if (conversationContext.length > 10) {
+                conversationContext = conversationContext.slice(-10);
+            }
+        }
+
+        // Durum göstergeleri
+        function showStatus(message, type) {
+            statusIndicator.innerText = message;
+            statusIndicator.className = `status-indicator status-${type}`;
+            statusIndicator.style.display = 'block';
+        }
+
+        function hideStatus() {
+            statusIndicator.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorMessageDiv.innerText = message;
+            errorMessageDiv.style.display = 'block';
+            setTimeout(() => {
+                errorMessageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Konuşma geçmişini yükle
+        async function loadConversationHistory() {
+            try {
+                const response = await fetch('/conversation-history?limit=20');
+                const data = await response.json();
+                displayConversationHistory(data.conversations);
+            } catch (error) {
+                console.error('Geçmiş yükleme hatası:', error);
+                showError('Geçmiş yüklenirken hata oluştu.');
+            }
+        }
+
+        // Konuşma geçmişini görüntüle
+        function displayConversationHistory(conversations) {
+            historyList.innerHTML = '';
+            
+            if (conversations.length === 0) {
+                historyList.innerHTML = '<p>Henüz konuşma geçmişi yok.</p>';
+                return;
+            }
+
+            conversations.forEach(conv => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const timestamp = new Date(conv.timestamp).toLocaleString('tr-TR');
+                
+                historyItem.innerHTML = `
+                    <div class="history-timestamp">🕒 ${timestamp}</div>
+                    <div class="history-personality">${conv.personality}</div>
+                    <div class="history-question"><strong>❓ Soru:</strong> ${conv.user_question}</div>
+                    <div class="history-answer"><strong>💬 Cevap:</strong> ${conv.ai_answer}</div>
+                    <div class="history-actions">
+                        ${conv.audio_url ? `<button class="btn-play" onclick="playHistoryAudio('${conv.audio_url}')">🔊 Sesi Oynat</button>` : ''}
+                        <button class="btn-delete" onclick="deleteConversation(${conv.id})">🗑️ Sil</button>
+                    </div>
+                `;
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        // Geçmiş sesi oynat
+        function playHistoryAudio(audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch(e => {
+                console.error("Ses oynatma hatası:", e);
+                showError("Ses oynatılamadı.");
+            });
+        }
+
+        // Konuşma sil
+        async function deleteConversation(conversationId) {
+            if (!confirm('Bu konuşmayı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/conversation/${conversationId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadConversationHistory();
+                } else {
+                    showError('Konuşma silinirken hata oluştu.');
+                }
+            } catch (error) {
+                console.error('Silme hatası:', error);
+                showError('Konuşma silinirken hata oluştu.');
+            }
+        }
+
+        // Geçmişi temizle
+        async function clearHistory() {
+            if (!confirm('Tüm konuşma geçmişini silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/clear-history', {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadConversationHistory();
+                    showStatus('Geçmiş temizlendi.', 'success');
+                } else {
+                    showError('Geçmiş temizlenirken hata oluştu.');
+                }
+            } catch (error) {
+                console.error('Temizleme hatası:', error);
+                showError('Geçmiş temizlenirken hata oluştu.');
+            }
+        }
+
+        // Analitik yükle
+        async function loadAnalytics() {
+            try {
+                const response = await fetch('/analytics?days=30');
+                const data = await response.json();
+                displayAnalytics(data);
+            } catch (error) {
+                console.error('Analitik yükleme hatası:', error);
+                showError('Analitik yüklenirken hata oluştu.');
+            }
+        }
+
+        // Analitik görüntüle
+        function displayAnalytics(analytics) {
+            analyticsGrid.innerHTML = `
+                <div class="analytics-card">
+                    <h4>📊 Toplam Olay</h4>
+                    <div class="analytics-value">${analytics.total_events}</div>
+                </div>
+                <div class="analytics-card">
+                    <h4>👥 Aktif Kullanıcı</h4>
+                    <div class="analytics-value">${analytics.active_users}</div>
+                </div>
+                <div class="analytics-card">
+                    <h4>📅 Dönem (Gün)</h4>
+                    <div class="analytics-value">${analytics.period_days}</div>
+                </div>
+            `;
+        }
+
+        // Ses ayarlarını kaydet
+        async function saveVoiceSettings() {
+            const settings = {
+                stability: parseFloat(document.getElementById('stability').value),
+                similarity_boost: parseFloat(document.getElementById('similarityBoost').value),
+                style: parseFloat(document.getElementById('style').value),
+                use_speaker_boost: document.getElementById('speakerBoost').checked
+            };
+
+            try {
+                const response = await fetch('/set-voice-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    showStatus('Ses ayarları kaydedildi!', 'success');
+                    voiceSettingsPanel.style.display = 'none';
+                } else {
+                    showError('Ses ayarları kaydedilirken hata oluştu.');
+                }
+            } catch (error) {
+                console.error('Ses ayarları hatası:', error);
+                showError('Ses ayarları kaydedilirken hata oluştu.');
+            }
+        }
+
+        // Buton olayları
+        recordButton.addEventListener('click', () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordButton.classList.remove('recording');
+                recordButton.innerHTML = '🎤 Başlat';
+                hideStatus();
+                console.log('Recording stopped...');
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        });
+
+        personalityButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+                personalityButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                const personality = button.getAttribute('data-personality');
+                currentPersonality = personality;
+                
+                try {
+                    const response = await fetch('/set-personality', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ personality })
+                    });
+                    
+                    if (response.ok) {
+                        showStatus(`Personality ${personality} olarak ayarlandı`, 'success');
+                    } else {
+                        showError('Personality ayarlanamadı.');
+                    }
+                } catch (error) {
+                    console.error('Personality set error:', error);
+                    showError('Personality ayarlanırken hata oluştu.');
+                }
+            });
+        });
+
+        // Panel kontrol butonları
+        historyButton.addEventListener('click', () => {
+            hideAllPanels();
+            historyPanel.style.display = 'block';
+            loadConversationHistory();
+        });
+
+        settingsButton.addEventListener('click', () => {
+            hideAllPanels();
+            voiceSettingsPanel.style.display = 'block';
+        });
+
+        analyticsButton.addEventListener('click', () => {
+            hideAllPanels();
+            analyticsPanel.style.display = 'block';
+            loadAnalytics();
+        });
+
+        clearButton.addEventListener('click', clearHistory);
+
+        saveVoiceSettings.addEventListener('click', saveVoiceSettings);
+
+        // Panel gizleme fonksiyonu
+        function hideAllPanels() {
+            voiceSettingsPanel.style.display = 'none';
+            historyPanel.style.display = 'none';
+            analyticsPanel.style.display = 'none';
+        }
+
+        // Ses ayarları slider olayları
+        document.getElementById('stability').addEventListener('input', function() {
+            document.getElementById('stabilityValue').textContent = this.value;
+        });
+
+        document.getElementById('similarityBoost').addEventListener('input', function() {
+            document.getElementById('similarityBoostValue').textContent = this.value;
+        });
+
+        document.getElementById('style').addEventListener('input', function() {
+            document.getElementById('styleValue').textContent = this.value;
+        });
+
+        playButton.addEventListener('click', () => {
+            if (audioPlayer.src) {
+                audioPlayer.play().catch(e => {
+                    console.error("Ses oynatma hatası:", e);
+                    showError("Ses oynatılamadı. Tarayıcı ayarlarınızı kontrol edin.");
+                });
+            } else {
+                showError('Ses dosyası henüz yüklenmedi.');
+            }
+        });
+
+        // WebSocket bağlantısını başlat
+        connectWebSocket();
+
+        // Sayfa yüklendiğinde başlangıç ayarları
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Uygulama başlatıldı');
+            console.log('Session ID:', sessionId);
+        });
+    </script>
+</body>
+</html> 
